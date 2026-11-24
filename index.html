@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generator Prompt Kisi-Kisi dan Naskah Soal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: formulir input di kiri, panel hasil (blueprint + prompt) menempel di kanan; satu kolom di ponsel */
+:root{
+  --bg:#f3f4f7;
+  --surface:#ffffff;
+  --ink:#1b2233;
+  --muted:#5b6478;
+  --line:#d9dde6;
+  --accent:#1f4fb8;
+  --accent-soft:#e6edfb;
+  --mark:#f6d55c;
+  --ok:#1d7a4a; --ok-soft:#e3f3ea;
+  --warn:#9a5b00; --warn-soft:#fbf0dc;
+  --bad:#b3261e; --bad-soft:#fbe7e5;
+  --font-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151d; --surface:#1a202b; --ink:#e7eaf1; --muted:#a2abbd; --line:#2e3646;
+    --accent:#86a8f3; --accent-soft:#22304d; --mark:#8a7420;
+    --ok:#6fd19c; --ok-soft:#173326; --warn:#f0bd62; --warn-soft:#3a2c12; --bad:#f2958d; --bad-soft:#3d1b19;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151d; --surface:#1a202b; --ink:#e7eaf1; --muted:#a2abbd; --line:#2e3646;
+  --accent:#86a8f3; --accent-soft:#22304d; --mark:#8a7420;
+  --ok:#6fd19c; --ok-soft:#173326; --warn:#f0bd62; --warn-soft:#3a2c12; --bad:#f2958d; --bad-soft:#3d1b19;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+header.top{padding:20px 20px 8px;max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+header.top h1{font-family:var(--font-display);font-weight:700;font-size:26px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+header.top p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+main{max-width:1360px;margin:0 auto;padding:12px 20px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:20px;align-items:start}
+@media (max-width:980px){main{grid-template-columns:1fr}}
+.form{display:flex;flex-direction:column;gap:16px}
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+section.card h2{font-family:var(--font-display);font-size:17px;font-weight:600;margin:0 0 12px;display:flex;gap:10px;align-items:baseline}
+section.card h2 .num{font-family:var(--font-mono);font-size:12px;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:1px 6px;font-weight:500}
+.hint{color:var(--muted);font-size:13px;margin:-4px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 12px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500}
+label.f.req span::after{content:" *";color:var(--bad)}
+input[type=text],input[type=number],textarea,select{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+textarea{resize:vertical;min-height:70px;line-height:1.45}
+textarea.mono{font-family:var(--font-mono);font-size:13px}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input[type=number]{font-variant-numeric:tabular-nums}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;background:var(--bg)}
+.chips input{accent-color:var(--accent)}
+button.btn{font:inherit;font-size:14px;font-weight:600;border-radius:6px;padding:8px 14px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--surface)}
+button.btn.ghost{background:transparent;color:var(--accent)}
+button.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+button.btn.small{font-size:13px;padding:5px 10px}
+.tp{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.tp + .tp{margin-top:10px}
+.tp-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tp-head strong{font-family:var(--font-display);font-size:15px}
+.tp-meta{font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+.tp textarea{background:var(--surface)}
+.tp input{background:var(--surface)}
+.sum-line{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:10px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;font-variant-numeric:tabular-nums}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+aside.out{position:sticky;top:12px;display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 24px);overflow:auto;padding-bottom:4px}
+@media (max-width:980px){aside.out{position:static;max-height:none}}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.tile .k{font-size:12px;color:var(--muted)}
+.tile .v{font-family:var(--font-display);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile .s{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.checks li{font-size:13px;padding:7px 10px;border-radius:6px;border-left:4px solid}
+.checks li.bad{background:var(--bad-soft);border-color:var(--bad)}
+.checks li.warn{background:var(--warn-soft);border-color:var(--warn)}
+.checks li.ok{background:var(--ok-soft);border-color:var(--ok)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{font:inherit;font-weight:600;font-size:14px;background:none;border:none;border-bottom:3px solid transparent;padding:8px 12px;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:12px}
+tfoot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:none}
+td.l{text-align:left;white-space:normal}
+h3{font-family:var(--font-display);font-size:15px;margin:14px 0 6px}
+h3:first-child{margin-top:0}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line);margin:4px 0 2px}
+.bar span{display:block}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.c-l{background:#8fb0ec}.c-m{background:var(--accent)}.c-h{background:#0f2a66}
+:root[data-theme="dark"] .c-h{background:#d6e1fb}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .c-h{background:#d6e1fb}}
+.prompt-box{width:100%;min-height:440px;font-family:var(--font-mono);font-size:12.5px;line-height:1.5;background:var(--bg);white-space:pre;overflow:auto}
+.prompt-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.prompt-bar .meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.toast{font-size:13px;color:var(--ok);font-weight:600;min-height:1em}
+code{font-family:var(--font-mono);font-size:12.5px;background:var(--accent-soft);padding:0 4px;border-radius:3px}
+mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Generator Prompt Kisi-Kisi dan Naskah Soal</h1>
+    <p>Isi data asesmen di kiri. Blueprint komposisi dihitung otomatis, lalu master prompt lengkap siap disalin ke Claude untuk membuat kisi-kisi, naskah, kunci, rubrik, dan audit.</p>
+  </div>
+  <div class="top-actions">
+    <button class="btn ghost small" id="btnContoh" type="button">Muat contoh IPS VIII</button>
+    <button class="btn danger small" id="btnKosong" type="button">Kosongkan formulir</button>
+  </div>
+</header>
+
+<main>
+<div class="form">
+
+  <section class="card">
+    <h2><span class="num">01</span> Identitas asesmen</h2>
+    <div class="grid">
+      <label class="f req"><span>Nama sekolah</span><input type="text" id="sekolah" data-k="sekolah"></label>
+      <label class="f req"><span>Jenjang</span><input type="text" id="jenjang" data-k="jenjang"></label>
+      <label class="f req"><span>Mata pelajaran</span><input type="text" id="mapel" data-k="mapel"></label>
+      <label class="f req"><span>Kelas/Fase</span><input type="text" id="kelas" data-k="kelas"></label>
+      <label class="f"><span>Semester</span><input type="text" id="semester" data-k="semester"></label>
+      <label class="f"><span>Tahun pelajaran</span><input type="text" id="tahun" data-k="tahun"></label>
+      <label class="f req"><span>Jenis asesmen</span><input type="text" id="jenis" data-k="jenis"></label>
+      <label class="f"><span>Nama guru</span><input type="text" id="guru" data-k="guru"></label>
+      <label class="f"><span>Alokasi waktu (menit)</span><input type="number" min="0" id="waktu" data-k="waktu" data-num="1"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">02</span> Tujuan Pembelajaran dan cakupan materi</h2>
+    <p class="hint">Tulis materi satu baris per sub-materi. Awali judul bab dengan <code>#</code>. Kode materi (misalnya <code>2.3.1</code>) dibuat otomatis.</p>
+    <div id="tpList"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn ghost small" type="button" id="addTp">+ Tambah TP</button>
+    </div>
+    <label class="f" style="margin-top:14px"><span>Dokumen acuan/sumber (opsional)</span>
+      <input type="text" id="sumber" data-k="sumber" placeholder="Contoh: Buku Siswa IPS Kelas VIII Kurikulum Merdeka, Bab 1–4">
+    </label>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">03</span> Komposisi soal dan opsi</h2>
+    <div class="grid">
+      <label class="f req"><span>Jumlah pilihan ganda</span><input type="number" min="0" id="pg" data-k="pg" data-num="1"></label>
+      <label class="f req"><span>Jumlah uraian</span><input type="number" min="0" id="uraian" data-k="uraian" data-num="1"></label>
+      <label class="f"><span>Bentuk lain (nama)</span><input type="text" id="lainNama" data-k="lainNama" placeholder="mis. PG kompleks"></label>
+      <label class="f"><span>Jumlah bentuk lain</span><input type="number" min="0" id="lainJumlah" data-k="lainJumlah" data-num="1"></label>
+    </div>
+    <div style="margin-top:12px">
+      <div class="f req" style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:4px"><span>Jumlah opsi pilihan ganda (wajib dipilih guru)</span></div>
+      <div class="seg" id="opsiSeg" role="group" aria-label="Jumlah opsi pilihan ganda">
+        <button type="button" data-opsi="4" aria-pressed="false">4 opsi (A–D)</button>
+        <button type="button" data-opsi="5" aria-pressed="false">5 opsi (A–E)</button>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:4px">Pembagian butir per TP</div>
+      <div class="seg" id="alokSeg" role="group" aria-label="Pembagian butir per TP">
+        <button type="button" data-alok="materi" aria-pressed="false">Sebanding jumlah sub-materi</button>
+        <button type="button" data-alok="sama" aria-pressed="false">Rata per TP</button>
+        <button type="button" data-alok="manual" aria-pressed="false">Atur manual</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">04</span> Distribusi kognitif</h2>
+    <div class="grid">
+      <label class="f"><span>LOTS C1–C2 (%)</span><input type="number" min="0" max="100" id="lots" data-k="lots" data-num="1"></label>
+      <label class="f"><span>MOTS C3 (%)</span><input type="number" min="0" max="100" id="mots" data-k="mots" data-num="1"></label>
+      <label class="f"><span>HOTS C4–C6 (%)</span><input type="number" min="0" max="100" id="hots" data-k="hots" data-num="1"></label>
+    </div>
+    <div class="sum-line">Jumlah: <span id="pctPill" class="pill ok">100%</span></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">05</span> Stimulus visual</h2>
+    <div class="grid">
+      <label class="f"><span>Butir bervisual (%)</span><input type="number" min="0" max="100" id="visualPct" data-k="visualPct" data-num="1"></label>
+      <label class="f" style="grid-column:span 2"><span>Preferensi desain (opsional)</span><input type="text" id="desain" data-k="desain" placeholder="mis. hitam-putih, ramah cetak"></label>
+    </div>
+    <div style="margin-top:10px;font-size:13px;color:var(--muted);font-weight:500;margin-bottom:4px">Jenis visual yang disukai</div>
+    <div class="chips" id="visualChips"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">06</span> Skor</h2>
+    <div class="seg" id="skorSeg" role="group" aria-label="Cara pengaturan skor" style="margin-bottom:12px">
+      <button type="button" data-skor="bentuk" aria-pressed="false">Bobot per bentuk soal</button>
+      <button type="button" data-skor="level" aria-pressed="false">Skor per level kognitif (manual)</button>
+    </div>
+    <div id="skorBentuk">
+      <p class="hint">Bobot total per bentuk soal dibagi rata ke setiap butir. Jumlahnya sebaiknya 100.</p>
+      <div class="grid">
+        <label class="f"><span>Bobot pilihan ganda</span><input type="number" min="0" id="bobotPG" data-k="bobotPG" data-num="1"></label>
+        <label class="f"><span>Bobot uraian</span><input type="number" min="0" id="bobotUraian" data-k="bobotUraian" data-num="1"></label>
+        <label class="f"><span>Bobot bentuk lain</span><input type="number" min="0" id="bobotLain" data-k="bobotLain" data-num="1"></label>
+      </div>
+    </div>
+    <div id="skorLevel" hidden>
+      <p class="hint">Isi skor maksimum per butir untuk setiap level. Jumlah butir diambil dari blueprint. Jika totalnya bukan 100, nilai akhir dikonversi ke skala 0–100.</p>
+      <div class="tbl-wrap" id="skorLevelTbl"></div>
+    </div>
+    <div class="sum-line">Total skor maksimum: <span id="skorPill" class="pill ok">100</span> <span id="skorNote" style="color:var(--muted)"></span></div>
+  </section>
+
+</div>
+
+<aside class="out">
+  <div class="tiles" id="tiles"></div>
+  <div class="panel">
+    <h3>Pemeriksaan input</h3>
+    <ul class="checks" id="checks"></ul>
+  </div>
+  <div class="panel">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabBp" aria-selected="true" aria-controls="viewBp" type="button">Blueprint</button>
+      <button role="tab" id="tabPr" aria-selected="false" aria-controls="viewPr" type="button">Master prompt</button>
+    </div>
+    <div id="viewBp" role="tabpanel" style="padding-top:12px"></div>
+    <div id="viewPr" role="tabpanel" style="padding-top:12px" hidden>
+      <div class="prompt-bar">
+        <span class="meta" id="promptMeta"></span>
+        <span class="toast" id="toast" aria-live="polite"></span>
+        <button class="btn" type="button" id="btnCopy">Salin prompt</button>
+      </div>
+      <textarea class="prompt-box" id="promptBox" readonly aria-label="Master prompt hasil"></textarea>
+    </div>
+  </div>
+</aside>
+</main>
+
+<script>
+(function(){
+"use strict";
+var STORE = "asas-prompt-gen-v1";
+var VISUAL_TYPES = ["foto","ilustrasi","grafik","tabel","diagram","skema","infografik","peta"];
+
+var CONTOH = {
+  sekolah:"SMP BAHAGIA", jenjang:"SMP", mapel:"IPS", kelas:"VIII / D", semester:"Ganjil",
+  tahun:"2026/2027", jenis:"Asesmen Sumatif Akhir Semester (ASAS)", guru:"Deni Rohendi, S.Pd., M.Pd.",
+  waktu:120, sumber:"",
+  pg:40, uraian:5, lainNama:"", lainJumlah:0, opsi:"4", alok:"materi",
+  lots:25, mots:60, hots:15, visualPct:40,
+  visualJenis:["foto","ilustrasi","grafik","tabel","diagram","skema","infografik"], desain:"",
+  bobotPG:60, bobotUraian:40, bobotLain:0,
+  skorMode:"bentuk", skorLv:{pg:[1,1.5,2], ur:[5,7.5,9.5], ln:[1,2,3]},
+  tps:[
+    {teks:"Murid mampu menjelaskan potensi bencana alam, menganalisis dampak perubahan iklim terhadap kehidupan ekonomi, sosial, dan budaya masyarakat, serta merefleksikan pola adaptasi yang dapat dilakukan dalam konteks lokal, regional, dan global.", manual:"",
+     materi:"# Potensi dan karakteristik bencana alam\nPengertian dan jenis bencana alam (geologis, hidrometeorologis, biologis)\nFaktor penyebab dan wilayah rawan bencana di Indonesia\nDampak bencana terhadap lingkungan dan kehidupan masyarakat\n# Perubahan iklim\nPengertian cuaca, iklim, dan perubahan iklim\nFaktor alami dan aktivitas manusia yang memengaruhi perubahan iklim\nPemanasan global dan perubahan pola musim\n# Dampak perubahan iklim\nDampak terhadap kehidupan ekonomi (pertanian, perikanan, pendapatan, permukiman)\nDampak terhadap kehidupan sosial, kesehatan, dan kebudayaan masyarakat\nRespons perubahan iklim dalam konteks lokal, nasional, dan global\n# Adaptasi dan mitigasi\nUpaya adaptasi masyarakat terhadap perubahan iklim\nMitigasi bencana sebelum, saat, dan setelah bencana\nPeran individu, masyarakat, dan pemerintah dalam mengurangi risiko bencana\nKeterkaitan adaptasi dan mitigasi dengan Tujuan Pembangunan Berkelanjutan (SDGs)"},
+    {teks:"Murid mampu menjelaskan konsep pasar, proses terbentuknya harga melalui mekanisme permintaan dan penawaran, serta fungsi dan peran lembaga keuangan dalam mendukung kegiatan ekonomi masyarakat.", manual:"",
+     materi:"# Konsep dan fungsi pasar\nPengertian, fungsi, dan peran pasar dalam kegiatan ekonomi\nJenis pasar menurut wujud, waktu, luas jangkauan, dan bentuk kegiatan\nPasar tradisional, pasar modern, dan pasar digital\n# Permintaan dan penawaran\nPengertian permintaan dan faktor yang memengaruhinya\nPengertian penawaran dan faktor yang memengaruhinya\nHubungan antara permintaan, penawaran, dan jumlah barang\n# Harga dan keseimbangan pasar\nPengertian harga dan proses pembentukan harga\nPermintaan dan penawaran dalam menentukan harga pasar (keseimbangan)\nPerubahan harga akibat perubahan permintaan atau penawaran\nContoh penerapan konsep harga dalam kehidupan sehari-hari\n# Lembaga keuangan\nPengertian dan fungsi lembaga keuangan\nPeran bank dalam menghimpun dan menyalurkan dana\nLembaga keuangan bank dan nonbank (koperasi)\nPemanfaatan layanan keuangan secara bijak, aman, dan bertanggung jawab"},
+    {teks:"Murid mampu menganalisis faktor pendorong, manfaat, dan tantangan perdagangan internasional serta keterkaitannya dengan kondisi ekonomi dan kehidupan masyarakat Indonesia.", manual:"",
+     materi:"# Konsep perdagangan internasional\nPengertian perdagangan dalam negeri dan perdagangan internasional\nPerbedaan perdagangan dalam negeri dan antarnegara\nEkspor dan impor sebagai bentuk kerja sama ekonomi\n# Faktor pendorong perdagangan internasional\nPerbedaan sumber daya alam dan kondisi geografis\nPerbedaan teknologi, kualitas sumber daya manusia, dan biaya produksi\nPerbedaan kebijakan, selera, dan kebutuhan negara\n# Manfaat dan tantangan perdagangan internasional\nManfaat perdagangan internasional bagi kehidupan ekonomi dan negara\nDampak terhadap produsen lokal/UMKM dan daya saing\nTantangan: kebijakan tarif/kuota, ketergantungan impor, perubahan nilai tukar\n# Perdagangan internasional Indonesia\nProduk unggulan ekspor dan impor Indonesia\nAspek keadilan, kemandirian ekonomi, dan kesejahteraan masyarakat"},
+    {teks:"Murid mampu mengolah informasi tentang perubahan sistem sosial budaya dalam masyarakat yang majemuk, mengidentifikasi faktor penyebab dan dampaknya, serta menunjukkan sikap menghargai keberagaman untuk menjaga kehidupan sosial yang harmonis.", manual:"",
+     materi:"# Masyarakat majemuk\nPengertian dan bentuk kemajemukan (suku, agama, bahasa, budaya) di Indonesia\nFaktor yang membentuk kemajemukan masyarakat Indonesia\n# Perubahan sosial budaya\nPengertian dan bentuk perubahan sosial budaya\nFaktor penyebab perubahan (internal dan eksternal, termasuk teknologi dan globalisasi)\nDampak positif dan negatif perubahan sosial budaya\n# Mengolah informasi perubahan\nMembaca, membandingkan, dan menyimpulkan informasi perubahan dari teks, tabel, atau grafik\n# Sikap menghargai keberagaman\nToleransi, gotong royong, dan integrasi sosial\nUpaya menjaga kehidupan sosial yang harmonis dalam masyarakat majemuk"}
+  ]
+};
+var KOSONG = {
+  sekolah:"", jenjang:"", mapel:"", kelas:"", semester:"", tahun:"", jenis:"", guru:"", waktu:"",
+  sumber:"", pg:0, uraian:0, lainNama:"", lainJumlah:0, opsi:"", alok:"materi",
+  lots:25, mots:60, hots:15, visualPct:30, visualJenis:[], desain:"",
+  bobotPG:60, bobotUraian:40, bobotLain:0,
+  skorMode:"bentuk", skorLv:{pg:[1,1.5,2], ur:[5,7.5,9.5], ln:[1,2,3]},
+  tps:[{teks:"",materi:"",manual:""}]
+};
+
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+var S;
+try { var raw = localStorage.getItem(STORE); S = raw ? JSON.parse(raw) : clone(CONTOH); } catch(e){ S = clone(CONTOH); }
+if(!S || !S.tps){ S = clone(CONTOH); }
+function migrate(){
+  if(!S.skorMode) S.skorMode = "bentuk";
+  if(!S.skorLv) S.skorLv = clone(CONTOH.skorLv);
+  ["pg","ur","ln"].forEach(function(k){ if(!S.skorLv[k] || S.skorLv[k].length !== 3) S.skorLv[k] = CONTOH.skorLv[k].slice(); });
+}
+migrate();
+function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){} }
+
+var $ = function(id){ return document.getElementById(id); };
+function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
+function int(v){ return Math.max(0, Math.round(num(v))); }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function fmt(n){ return (Math.round(n*100)/100).toString().replace(".", ","); }
+
+/* ---------- parsing materi ---------- */
+function parseMateri(text, tpIdx){
+  var babs = [], cur = null;
+  String(text||"").split(/\r?\n/).forEach(function(line){
+    var t = line.trim();
+    if(!t) return;
+    if(t.charAt(0) === "#"){
+      cur = {judul: t.replace(/^#+\s*/, ""), subs: []}; babs.push(cur); return;
+    }
+    t = t.replace(/^([-*•]|\d+[.)])\s+/, "");
+    if(!cur){ cur = {judul:"Materi", subs:[]}; babs.push(cur); }
+    cur.subs.push(t);
+  });
+  babs = babs.filter(function(b){ return b.subs.length || b.judul; });
+  var rows = [];
+  babs.forEach(function(b, bi){
+    if(!b.subs.length){ rows.push({kode:(tpIdx+1)+"."+(bi+1), bab:b.judul, sub:"(sub-materi belum diisi)"}); return; }
+    b.subs.forEach(function(s, si){ rows.push({kode:(tpIdx+1)+"."+(bi+1)+"."+(si+1), bab: si===0 ? b.judul : "", sub:s}); });
+  });
+  var subCount = 0; babs.forEach(function(b){ subCount += b.subs.length; });
+  return {babs:babs, rows:rows, subCount:subCount};
+}
+
+/* ---------- rounding ---------- */
+function largestRemainder(weights, total){
+  var n = weights.length, sum = 0, i;
+  for(i=0;i<n;i++) sum += Math.max(0, weights[i]);
+  if(n === 0) return [];
+  if(sum <= 0){ weights = weights.map(function(){ return 1; }); sum = n; }
+  var raw = weights.map(function(w){ return Math.max(0,w) / sum * total; });
+  var out = raw.map(Math.floor);
+  var left = total - out.reduce(function(a,b){ return a+b; }, 0);
+  var order = raw.map(function(r,i){ return {i:i, f:r - Math.floor(r)}; })
+                 .sort(function(a,b){ return b.f - a.f || a.i - b.i; });
+  for(i=0;i<left;i++) out[order[i % n].i]++;
+  return out;
+}
+/* matrix rounding that keeps both row and column totals */
+function matrixRound(rows, cols){
+  var R = rows.length, C = cols.length, T = rows.reduce(function(a,b){return a+b;},0);
+  var M = [], cand = [], i, j;
+  var rd = rows.slice(), cd = cols.slice();
+  for(i=0;i<R;i++){ M.push([]); for(j=0;j<C;j++){
+    var ideal = T ? rows[i]*cols[j]/T : 0, f = Math.floor(ideal);
+    M[i][j] = f; rd[i] -= f; cd[j] -= f; cand.push({i:i,j:j,f:ideal-f});
+  }}
+  cand.sort(function(a,b){ return b.f - a.f; });
+  cand.forEach(function(c){ if(rd[c.i]>0 && cd[c.j]>0){ M[c.i][c.j]++; rd[c.i]--; cd[c.j]--; } });
+  for(i=0;i<R;i++) for(j=0;j<C;j++) while(rd[i]>0 && cd[j]>0){ M[i][j]++; rd[i]--; cd[j]--; }
+  return M;
+}
+function clampAlloc(arr, caps, total){
+  var a = arr.map(function(v,i){ return Math.min(v, caps[i]); });
+  var left = total - a.reduce(function(x,y){return x+y;},0);
+  var guard = 0;
+  while(left > 0 && guard++ < 1000){
+    var best=-1, room=0;
+    for(var i=0;i<a.length;i++){ if(caps[i]-a[i] > room){ room = caps[i]-a[i]; best=i; } }
+    if(best<0) break; a[best]++; left--;
+  }
+  return a;
+}
+
+/* ---------- blueprint ---------- */
+function compute(){
+  var pg = int(S.pg), ur = int(S.uraian), ln = int(S.lainJumlah);
+  var N = pg + ur + ln;
+  var tps = S.tps.map(function(t,i){ var p = parseMateri(t.materi, i); return {teks:t.teks, manual:t.manual, parsed:p}; });
+  var n = tps.length;
+  var weights, manualSum = 0, manualUsed = false;
+  if(S.alok === "sama") weights = tps.map(function(){ return 1; });
+  else if(S.alok === "manual"){
+    weights = tps.map(function(t){ return int(t.manual); });
+    manualSum = weights.reduce(function(a,b){return a+b;},0); manualUsed = true;
+  }
+  else weights = tps.map(function(t){ return Math.max(1, t.parsed.subCount); });
+  var tot = (manualUsed && manualSum === N) ? weights.slice() : largestRemainder(weights, N);
+
+  var urA;
+  if(n && ur >= n){ var rest = largestRemainder(weights, ur - n); urA = rest.map(function(v){ return v+1; }); }
+  else urA = largestRemainder(weights, ur);
+  urA = clampAlloc(urA, tot, ur);
+  var lnA = clampAlloc(largestRemainder(weights, ln), tot.map(function(t,i){ return t - urA[i]; }), ln);
+  var pgA = tot.map(function(t,i){ return t - urA[i] - lnA[i]; });
+
+  var lv = largestRemainder([num(S.lots), num(S.mots), num(S.hots)], N);
+  var LM = matrixRound(tot, lv);
+
+  // forms take levels: uraian from highest, then lain, PG gets rest
+  var forms = tot.map(function(t,i){
+    var rem = LM[i].slice(); // [L,M,H]
+    // ambil level: HOTS dulu tetapi sisakan 1 HOTS untuk PG bila TP ini punya PG, lalu MOTS, LOTS, sisa HOTS
+    function take(k){
+      var o=[0,0,0], keep = pgA[i] > 0 ? 1 : 0;
+      var h = Math.min(k, Math.max(0, rem[2] - keep)); o[2]+=h; rem[2]-=h; k-=h;
+      [1,0,2].forEach(function(j){ var x=Math.min(k, rem[j]); o[j]+=x; rem[j]-=x; k-=x; });
+      return o;
+    }
+    var u = take(urA[i]), l = take(lnA[i]);
+    return {ur:u, ln:l, pg:rem.slice()};
+  });
+
+  var V = Math.round(N * num(S.visualPct) / 100);
+  var visA = largestRemainder(tot, Math.min(V, N));
+
+  // nomor
+  var no = 1, nomor = [];
+  tps.forEach(function(t,i){ if(pgA[i]>0){ nomor.push({from:no, to:no+pgA[i]-1, bentuk:"PG", tp:i, lv:forms[i].pg}); no += pgA[i]; } });
+  tps.forEach(function(t,i){ if(lnA[i]>0){ nomor.push({from:no, to:no+lnA[i]-1, bentuk:S.lainNama||"Bentuk lain", tp:i, lv:forms[i].ln}); no += lnA[i]; } });
+  tps.forEach(function(t,i){
+    var f = forms[i].ur, seq = [];
+    for(var j=0;j<f[2];j++) seq.push("HOTS"); for(j=0;j<f[1];j++) seq.push("MOTS"); for(j=0;j<f[0];j++) seq.push("LOTS");
+    seq.reverse(); // dari mudah ke sulit
+    seq.forEach(function(s){ nomor.push({from:no, to:no, bentuk:"Uraian", tp:i, lvName:s}); no++; });
+  });
+
+  var k = S.opsi === "5" ? 5 : 4;
+  var keyBase = Math.floor(pg / k), keyMax = keyBase + (pg % k ? 1 : 0);
+
+  var fpg=[0,0,0], fur=[0,0,0], fln=[0,0,0];
+  forms.forEach(function(f){ for(var j=0;j<3;j++){ fpg[j]+=f.pg[j]; fur[j]+=f.ur[j]; fln[j]+=f.ln[j]; } });
+
+  var B = {N:N, pg:pg, ur:ur, ln:ln, tps:tps, tot:tot, urA:urA, lnA:lnA, pgA:pgA, lv:lv, LM:LM, forms:forms,
+          V:V, visA:visA, nomor:nomor, k:k, keyBase:keyBase, keyMax:keyMax, manualSum:manualSum, manualUsed:manualUsed,
+          fpg:fpg, fur:fur, fln:fln};
+  B.skor = computeSkor(B);
+  return B;
+}
+
+/* ---------- skor ---------- */
+var LVN = ["LOTS","MOTS","HOTS"], LVC = ["C1–C2","C3","C4–C6"];
+function formDefs(B){
+  var d = [];
+  if(B.pg) d.push({key:"pg", nama:"Pilihan ganda", n:B.pg, cnt:B.fpg, bobot:num(S.bobotPG)});
+  if(B.ln) d.push({key:"ln", nama:S.lainNama || "Bentuk lain", n:B.ln, cnt:B.fln, bobot:num(S.bobotLain)});
+  if(B.ur) d.push({key:"ur", nama:"Uraian", n:B.ur, cnt:B.fur, bobot:num(S.bobotUraian)});
+  return d;
+}
+function computeSkor(B){
+  var mode = S.skorMode === "level" ? "level" : "bentuk";
+  var rows = formDefs(B).map(function(f){
+    var sc;
+    if(mode === "level") sc = S.skorLv[f.key].map(num);
+    else { var per = f.n ? f.bobot / f.n : 0; sc = [per, per, per]; }
+    var sub = 0; for(var j=0;j<3;j++) sub += f.cnt[j] * sc[j];
+    return {key:f.key, nama:f.nama, n:f.n, cnt:f.cnt, sc:sc, sub:sub};
+  });
+  var total = rows.reduce(function(a,r){ return a + r.sub; }, 0);
+  var byKey = {}; rows.forEach(function(r){ byKey[r.key] = r; });
+  return {mode:mode, rows:rows, total:total, byKey:byKey};
+}
+function near(a,b){ return Math.abs(a-b) < 1e-9; }
+
+/* ---------- validation ---------- */
+function validate(B){
+  var out = [];
+  var pct = num(S.lots)+num(S.mots)+num(S.hots);
+  if(B.N === 0) out.push(["bad","Jumlah soal masih nol. Isi jumlah pilihan ganda dan/atau uraian."]);
+  if(B.pg > 0 && !S.opsi) out.push(["bad","Jumlah opsi PG belum dipilih. Prompt akan meminta Claude menanyakannya lebih dulu."]);
+  if(Math.abs(pct - 100) > 0.001) out.push(["bad","Distribusi kognitif berjumlah "+fmt(pct)+"%, harus 100%."]);
+  if(num(S.visualPct) > 100 || num(S.visualPct) < 0) out.push(["bad","Persentase visual harus antara 0 dan 100."]);
+  var req = [["sekolah","nama sekolah"],["jenjang","jenjang"],["mapel","mata pelajaran"],["kelas","kelas/fase"],["jenis","jenis asesmen"]];
+  var miss = req.filter(function(r){ return !String(S[r[0]]||"").trim(); }).map(function(r){ return r[1]; });
+  if(miss.length) out.push(["warn","Identitas belum lengkap: "+miss.join(", ")+"."]);
+  S.tps.forEach(function(t,i){
+    if(!String(t.teks||"").trim()) out.push(["bad","Rumusan TP "+(i+1)+" masih kosong."]);
+    else if(!B.tps[i].parsed.subCount) out.push(["warn","TP "+(i+1)+" belum punya rincian materi. Claude akan memetakan materi dari rumusan TP dan mencatat asumsinya."]);
+  });
+  if(B.manualUsed && B.manualSum !== B.N) out.push(["warn","Jumlah butir manual per TP = "+B.manualSum+", tidak sama dengan total "+B.N+". Sementara dipakai sebagai bobot."]);
+  if(B.ln > 0 && !String(S.lainNama||"").trim()) out.push(["warn","Bentuk lain berjumlah "+B.ln+" tetapi namanya belum diisi."]);
+  if(B.skor.mode === "bentuk"){
+    var skor = num(S.bobotPG) + num(S.bobotUraian) + num(S.bobotLain);
+    if(Math.abs(skor - 100) > 0.001) out.push(["warn","Total bobot skor "+fmt(skor)+", bukan 100."]);
+    if(B.pg === 0 && num(S.bobotPG) > 0) out.push(["warn","Tidak ada PG, tetapi bobot PG masih "+fmt(num(S.bobotPG))+"."]);
+    if(B.ur === 0 && num(S.bobotUraian) > 0) out.push(["warn","Tidak ada uraian, tetapi bobot uraian masih "+fmt(num(S.bobotUraian))+"."]);
+    if(B.ln === 0 && num(S.bobotLain) > 0) out.push(["warn","Tidak ada bentuk lain, tetapi bobotnya masih "+fmt(num(S.bobotLain))+"."]);
+  } else {
+    B.skor.rows.forEach(function(r){
+      for(var j=0;j<3;j++) if(r.cnt[j] > 0 && !(r.sc[j] > 0)) out.push(["bad","Skor "+r.nama+" "+LVN[j]+" masih 0, padahal ada "+r.cnt[j]+" butir."]);
+      var used = [0,1,2].filter(function(j){ return r.cnt[j] > 0; });
+      for(var a=0;a<used.length-1;a++){
+        if(r.sc[used[a]] > r.sc[used[a+1]]) out.push(["warn","Skor "+r.nama+" "+LVN[used[a+1]]+" ("+fmt(r.sc[used[a+1]])+") lebih kecil dari "+LVN[used[a]]+" ("+fmt(r.sc[used[a]])+"). Biasanya level lebih tinggi diberi skor sama atau lebih besar."]);
+      }
+    });
+    if(B.skor.total > 0 && !near(B.skor.total, 100)) out.push(["ok","Total skor maksimum "+fmt(B.skor.total)+". Nilai akhir dikonversi: skor diperoleh ÷ "+fmt(B.skor.total)+" × 100."]);
+  }
+  if(B.ur > 0 && B.lv[2] < Math.min(B.ur, 1)) out.push(["warn","Ada uraian tetapi tidak ada butir HOTS. Periksa distribusi kognitif."]);
+  if(!out.some(function(c){ return c[0] !== "ok"; })) out.unshift(["ok","Input lengkap dan konsisten. Prompt siap disalin."]);
+  return out;
+}
+
+/* ---------- prompt text ---------- */
+function lvLabel(a){ var p=[]; if(a[0]) p.push(a[0]+" LOTS"); if(a[1]) p.push(a[1]+" MOTS"); if(a[2]) p.push(a[2]+" HOTS"); return p.join(", ") || "-"; }
+function buildPrompt(B){
+  var L = [], k = B.k, letters = k===5 ? "A, B, C, D, E" : "A, B, C, D", rng = k===5 ? "A–E" : "A–D";
+  var opsiSet = !!S.opsi;
+  var hasLn = B.ln > 0, lnName = S.lainNama || "Bentuk lain";
+  function v(x, d){ x = String(x==null?"":x).trim(); return x || d; }
+  function p(s){ L.push(s==null?"":s); }
+
+  p("MASTER PROMPT GENERATOR KISI-KISI DAN NASKAH SOAL TERINTEGRASI");
+  p("");
+  p("# BAGIAN 1. IDENTITAS DAN PERAN");
+  p("");
+  p("Anda adalah ASSESSMENT DESIGNER & EDUCATIONAL ASSESSMENT EXPERT, ahli dalam analisis kurikulum, perencanaan asesmen, konstruksi soal, stimulus, asesmen HOTS, literasi-numerasi, visualisasi data, dan audit instrumen pendidikan.");
+  p("");
+  p("Tugas Anda adalah menghasilkan perangkat asesmen yang valid, bermakna, sesuai dokumen acuan, akurat secara konsep, serta siap digunakan guru.");
+  p("");
+  p("Produk utama:");
+  p("1. Dokumen Kisi-Kisi Soal.");
+  p("2. Dokumen Naskah Soal Lengkap beserta kunci, pembahasan, rubrik, dan pedoman penskoran.");
+  p("");
+  p("Kedua dokumen harus dibuat dari satu rancangan/basis data asesmen yang sama. Nomor, indikator, stimulus, soal, opsi, kunci, pembahasan, dan rubrik harus konsisten.");
+  p("");
+  p("Prinsip kerja:");
+  p("- Utamakan kesesuaian dengan dokumen sumber dan Tujuan Pembelajaran (TP).");
+  p("- Utamakan kualitas dan kebermaknaan soal, bukan sekadar memenuhi jumlah.");
+  p("- Gunakan konteks yang wajar, relevan, dan tidak dibuat-buat.");
+  p("- Jangan menambahkan materi, data, atau fakta yang tidak didukung sumber, kecuali guru meminta pengayaan.");
+  p("- Jangan meminta persetujuan berulang pada setiap tahapan.");
+  p("- Jangan mengklaim telah melakukan audit visual, audit nonvisual, atau pemeriksaan lain jika hal itu belum benar-benar dilakukan. Nyatakan batas audit secara jujur.");
+  p("- Jika guru hanya mengisi sebagian data opsional, lengkapi sisanya dengan asumsi profesional yang wajar dan catat asumsi itu. Jangan menanyakan ulang data yang sudah tersedia.");
+  p("");
+  p("# BAGIAN 2. DATA INPUT ASESMEN");
+  p("");
+  p("## 2.1 Identitas asesmen");
+  p("- Nama sekolah: " + v(S.sekolah, "[belum diisi]"));
+  p("- Jenjang: " + v(S.jenjang, "[belum diisi]"));
+  p("- Mata pelajaran: " + v(S.mapel, "[belum diisi]"));
+  p("- Kelas/Fase: " + v(S.kelas, "[belum diisi]"));
+  p("- Semester: " + v(S.semester, "[opsional, belum diisi]"));
+  p("- Tahun pelajaran: " + v(S.tahun, "[opsional, belum diisi]"));
+  p("- Jenis asesmen: " + v(S.jenis, "[belum diisi]"));
+  p("- Nama guru: " + v(S.guru, "[opsional, belum diisi]"));
+  p("- Alokasi waktu: " + (int(S.waktu) ? int(S.waktu) + " menit" : "[belum diisi; gunakan asumsi wajar sesuai jumlah soal dan catat]"));
+  p("");
+  p("## 2.2 Tujuan Pembelajaran (TP)");
+  S.tps.forEach(function(t,i){ p((i+1) + ". TP " + (i+1) + ". " + v(t.teks, "[rumusan TP belum diisi]")); });
+  p("");
+  p("Dokumen acuan/materi/buku/modul/teks sumber: " + v(S.sumber, "tidak dilampirkan. Kembangkan soal berdasarkan TP dan rincian materi di bawah. Jangan mengklaim soal atau data berasal dari buku atau dokumen tertentu."));
+  p("");
+  p("## 2.3 Rincian cakupan materi per TP");
+  p("Kode materi berformat TP.Bab.Sub dan dipakai sebagai rujukan di kisi-kisi dan basis data butir.");
+  B.tps.forEach(function(t,i){
+    p("");
+    p("TP " + (i+1) + ":");
+    if(!t.parsed.rows.length){ p("- [Rincian materi belum diisi. Petakan materi secara bertanggung jawab dari rumusan TP, beri kode " + (i+1) + ".x.y, dan catat sebagai asumsi.]"); return; }
+    t.parsed.babs.forEach(function(b, bi){
+      p("- " + (i+1) + "." + (bi+1) + " " + b.judul);
+      b.subs.forEach(function(s, si){ p("  - " + (i+1) + "." + (bi+1) + "." + (si+1) + " " + s); });
+    });
+  });
+  p("");
+  p("Aturan data dan sumber:");
+  p("- Jangan mengarang kutipan, referensi, data penelitian, atau mengklaim materi berasal dari dokumen tertentu jika dokumen itu tidak diberikan.");
+  p("- Data buatan untuk kebutuhan soal wajib diberi label \"data simulasi\".");
+  p("- Jika TP terlalu umum sehingga cakupan materi tidak dapat ditentukan secara bertanggung jawab, ajukan satu pertanyaan klarifikasi yang paling penting. Jika TP cukup jelas, lanjutkan otomatis dan catat asumsi cakupan materi secara ringkas.");
+  p("");
+  p("## 2.4 Komposisi soal");
+  p("- Pilihan ganda: " + B.pg);
+  p("- Uraian: " + B.ur);
+  p("- Bentuk lain: " + (hasLn ? lnName + " (" + B.ln + ")" : "tidak ada"));
+  p("- Total soal: " + B.N);
+  p("");
+  p("## 2.5 Jumlah opsi pilihan ganda");
+  if(B.pg === 0) p("Tidak ada soal pilihan ganda; bagian ini tidak berlaku.");
+  else if(opsiSet){
+    p("Pilihan guru: " + k + " opsi (" + letters + "). Gunakan " + k + " opsi secara konsisten pada seluruh butir PG, kisi-kisi teknis, naskah, kunci, pembahasan, dan audit. Jangan mengubah jumlah opsi secara otomatis.");
+  } else {
+    p("Guru belum memilih. Sebelum mengerjakan apa pun, ajukan satu pertanyaan langsung: \"Untuk soal pilihan ganda, Bapak/Ibu memilih 4 opsi (A–D) atau 5 opsi (A–E)?\" Jangan mengasumsikan pilihan berdasarkan jenjang. Setelah guru memilih, gunakan jumlah opsi itu secara konsisten di seluruh dokumen.");
+  }
+  p("");
+  p("## 2.6 Distribusi kognitif");
+  p("- LOTS (C1–C2): " + fmt(num(S.lots)) + "% = " + B.lv[0] + " butir");
+  p("- MOTS (C3): " + fmt(num(S.mots)) + "% = " + B.lv[1] + " butir");
+  p("- HOTS (C4–C6): " + fmt(num(S.hots)) + "% = " + B.lv[2] + " butir");
+  p("Konversi memakai pembulatan sisa terbesar sehingga total tetap " + B.N + " butir.");
+  p("");
+  p("## 2.7 Distribusi stimulus visual");
+  p("- Butir dengan stimulus visual: " + fmt(num(S.visualPct)) + "% = " + B.V + " dari " + B.N + " butir.");
+  p("- Jenis visual yang disukai: " + ((S.visualJenis||[]).length ? S.visualJenis.join(", ") : "tidak ditentukan; pilih sesuai karakter materi"));
+  p("- Preferensi desain: " + v(S.desain, "tidak ditentukan. Asumsi: sederhana, tetap terbaca bila dicetak hitam-putih, huruf jelas, dengan judul, satuan, dan keterangan sumber atau label data simulasi."));
+  p("- Jangan memaksakan visual pada butir yang lebih tepat memakai stimulus teks, data, atau fenomena.");
+  p("");
+  p("# BAGIAN 3. ATURAN EFISIENSI DAN KLARIFIKASI");
+  p("1. Baca seluruh input dan dokumen sumber jika tersedia. Jika tidak tersedia, lanjutkan pengembangan materi berdasarkan TP dan rincian materi pada Bagian 2.");
+  p("2. Identifikasi hanya informasi yang benar-benar belum tersedia dan mutlak diperlukan.");
+  p("3. Ajukan maksimal satu rangkaian klarifikasi ringkas untuk data wajib yang masih kosong. Data wajib: TP, jumlah dan bentuk soal, jumlah opsi PG (jika ada PG).");
+  p("4. Jangan meminta persetujuan untuk analisis TP, pemetaan materi, penyusunan indikator, kisi-kisi, penulisan soal, kunci, pembahasan, rubrik, atau audit.");
+  p("5. Jika data opsional kosong, gunakan asumsi profesional yang wajar dan tuliskan asumsi itu pada catatan guru.");
+  p("6. Setelah input memadai, lanjutkan otomatis hingga seluruh keluaran selesai.");
+  p("7. Jika keluaran terlalu panjang, lanjutkan secara bertahap dengan mempertahankan nomor dan basis data yang sama. Jangan mengulang pertanyaan atau meminta persetujuan ulang. Beri penanda posisi, misalnya \"Lanjutan: butir 21–30 dari " + B.N + "\".");
+  p("8. Jika ada data yang saling bertentangan, pakai angka yang konsisten secara matematis, catat pada catatan guru, dan lanjutkan.");
+  p("9. Ajukan klarifikasi hanya bila jawabannya mengubah isi perangkat secara substansial.");
+  p("");
+  p("# BAGIAN 4. ALUR KERJA OTOMATIS");
+  p("Jalankan berurutan pada satu basis data butir:");
+  p("A. Validasi input (total soal, jumlah opsi, total persentase kognitif 100%, data wajib).");
+  p("B. Analisis TP dan pemetaan materi: TP → kode materi → kata kerja operasional.");
+  p("C. Blueprint: alokasi butir per TP, bentuk, level kognitif, visual, nomor (Bagian 5).");
+  p("D. Perumusan indikator soal per butir.");
+  p("E. Penulisan stimulus dan butir sesuai standar (Bagian 6).");
+  p("F. Kunci jawaban dan pembahasan.");
+  p("G. Rubrik dan pedoman penskoran (Bagian 9).");
+  p("H. Audit instrumen dan perbaikan otomatis (Bagian 10).");
+  p("I. Perakitan dua dokumen akhir dari basis data yang sama.");
+  p("");
+  p("Basis data butir (satu baris per nomor), kolom minimal: nomor; bentuk; kode TP; kode materi; indikator; level (C1–C6); kategori (LOTS/MOTS/HOTS); jenis stimulus; spesifikasi visual (bila ada); teks stimulus; pokok soal; opsi" + (B.pg ? " " + rng : "") + "; kunci; pembahasan; rubrik (uraian); skor maksimum; catatan audit. Kisi-kisi dan naskah hanya boleh dirakit dari basis data ini. Perubahan pada satu butir diterapkan ke semua dokumen.");
+  p("");
+  p("# BAGIAN 5. BLUEPRINT KOMPOSISI SOAL (sudah dihitung; gunakan apa adanya)");
+  p("");
+  var hdr = "| TP | PG |" + (hasLn ? " " + lnName + " |" : "") + " Uraian | Total | LOTS | MOTS | HOTS | Visual |";
+  p(hdr);
+  p("|" + hdr.split("|").slice(1,-1).map(function(){ return " --- "; }).join("|") + "|");
+  B.tps.forEach(function(t,i){
+    p("| TP " + (i+1) + " | " + B.pgA[i] + " |" + (hasLn ? " " + B.lnA[i] + " |" : "") + " " + B.urA[i] + " | " + B.tot[i] + " | " + B.LM[i][0] + " | " + B.LM[i][1] + " | " + B.LM[i][2] + " | " + B.visA[i] + " |");
+  });
+  var sumv = function(a){ return a.reduce(function(x,y){return x+y;},0); };
+  p("| Jumlah | " + B.pg + " |" + (hasLn ? " " + B.ln + " |" : "") + " " + B.ur + " | " + B.N + " | " + B.lv[0] + " | " + B.lv[1] + " | " + B.lv[2] + " | " + sumv(B.visA) + " |");
+  p("");
+  var fpg=[0,0,0], fur=[0,0,0], fln=[0,0,0];
+  B.forms.forEach(function(f){ for(var j=0;j<3;j++){ fpg[j]+=f.pg[j]; fur[j]+=f.ur[j]; fln[j]+=f.ln[j]; } });
+  p("Rincian level per bentuk: PG " + lvLabel(fpg) + (hasLn ? "; " + lnName + " " + lvLabel(fln) : "") + (B.ur ? "; uraian " + lvLabel(fur) : "") + ".");
+  p("");
+  p("Peta nomor soal (PG per TP dari mudah ke sulit, lalu bentuk lain, lalu uraian):");
+  B.nomor.forEach(function(r){
+    var nr = r.from === r.to ? String(r.from) : r.from + "–" + r.to;
+    var lv = r.lvName ? (r.lvName === "HOTS" ? "HOTS (C4–C6)" : r.lvName === "MOTS" ? "MOTS (C3)" : "LOTS (C1–C2)") : lvLabel(r.lv);
+    var sk = "";
+    if(r.lvName && B.skor.byKey.ur) sk = " | skor maks " + fmt(B.skor.byKey.ur.sc[LVN.indexOf(r.lvName)]);
+    p("- Nomor " + nr + " | " + r.bentuk + " | TP " + (r.tp+1) + " | " + lv + sk);
+  });
+  p("");
+  p("Aturan blueprint:");
+  p("- Total setiap rekap harus sama dengan " + B.N + " butir sebelum penulisan butir dimulai.");
+  p("- Butir visual diprioritaskan pada materi yang memang visual (peta, grafik, tabel data, diagram proses, ilustrasi situasi).");
+  if(B.pg){
+    p("- Sebaran kunci PG " + rng + ": masing-masing " + (B.keyBase === B.keyMax ? B.keyBase : B.keyBase + "–" + B.keyMax) + " butir dari " + B.pg + ". Tidak boleh berpola dan tidak boleh lebih dari tiga kunci berurutan yang sama.");
+    p("- Target tingkat kesukaran rancangan: sekitar 30% mudah, 50% sedang, 20% sulit (target, bukan hasil uji coba).");
+  }
+  p("- Satu butir mengukur satu indikator utama dan satu kode materi utama; butir tidak saling memberi petunjuk jawaban.");
+  p("");
+  p("# BAGIAN 6. STANDAR PENULISAN BUTIR DAN STIMULUS");
+  p("");
+  p("6.1 Prinsip umum");
+  p("- Setiap butir mengukur satu indikator dan terkait langsung dengan satu TP. Level kognitif harus sesuai tuntutan kerja yang sebenarnya, bukan sekadar label.");
+  p("- Bahasa baku, jelas, ringkas, sesuai kemampuan membaca " + v(S.jenjang,"jenjang") + " kelas " + v(S.kelas,"sasaran") + ".");
+  p("- Konteks wajar dan dekat dengan kehidupan murid. Bebas bias SARA, gender, dan status sosial; tidak memakai stereotip.");
+  p("- Fakta akurat dan stabil. Data yang berubah menurut waktu (angka statistik, harga, kurs) memakai data simulasi berlabel atau ditandai untuk diverifikasi guru.");
+  p("- Jangan menyebut kejadian, angka, atau lembaga nyata sebagai fakta bila tidak yakin; gunakan kasus rekaan berlabel.");
+  p("");
+  if(B.pg){
+    p("6.2 Standar pilihan ganda (" + k + " opsi)");
+    p("1. Pokok soal jelas, lengkap, tanpa petunjuk jawaban. Hindari negatif ganda; bila terpaksa memakai \"bukan\"/\"kecuali\", cetak tebal.");
+    p("2. Tepat " + k + " opsi (" + letters + "), satu kunci benar, pengecoh masuk akal dari miskonsepsi umum.");
+    p("3. Opsi homogen dalam isi, tata bahasa, dan panjang. Kunci tidak selalu yang terpanjang.");
+    p("4. Dilarang \"semua jawaban benar/salah\" atau \"A dan B benar\". Opsi angka disusun urut.");
+    p("5. Butir HOTS memuat stimulus baru (kasus, data, visual) dan menuntut penalaran, bukan hafalan yang diberi cerita.");
+    p("");
+  }
+  if(B.ur){
+    p("6.3 Standar uraian");
+    p("1. Perintah memakai kata kerja operasional sesuai level (jelaskan, bandingkan, analisislah, simpulkan, berikan alasan, rumuskan usulan).");
+    p("2. Cakupan jawaban terbatas dan dapat dinilai; jumlah poin yang diminta tertulis jelas.");
+    p("3. Setiap uraian disertai jawaban ideal dan rubrik dari basis data yang sama.");
+    p("4. Butir refleksi/evaluasi boleh berjawaban beragam; rubrik menilai kualitas alasan dan ketepatan konsep.");
+    p("");
+  }
+  if(hasLn){
+    p("6.3b Standar " + lnName);
+    p("Ikuti kaidah penulisan yang lazim untuk " + lnName + ", sertakan petunjuk cara menjawab yang jelas, kunci, dan aturan penskoran (termasuk skor parsial bila ada).");
+    p("");
+  }
+  p("6.4 Standar stimulus dan visual");
+  p("- Visual dipakai hanya bila informasinya dibutuhkan untuk menjawab.");
+  p("- Setiap butir bervisual memuat spesifikasi visual: jenis, isi dan elemen, judul, label sumbu/kolom, satuan, keterangan sumber. Format: [VISUAL: jenis; isi; judul; label; satuan; sumber/data simulasi].");
+  p("- Data buatan diberi label \"data simulasi\" tepat di bawah visual.");
+  p("- Jangan memakai foto nyata atau karya berhak cipta tanpa izin; jangan menampilkan wajah individu yang dapat dikenali.");
+  p("- Bila gambar tidak benar-benar dibuat, tulis spesifikasi dan teks alternatif satu kalimat, dan jangan menyatakan tampilan visual telah diperiksa.");
+  p("- Hitung ulang setiap angka di grafik/tabel agar konsisten dengan soal dan kunci.");
+  p("");
+  p("6.5 Kata kerja operasional: C1 menyebutkan/mengidentifikasi; C2 menjelaskan/mengklasifikasikan; C3 menerapkan/menggunakan/menghitung; C4 membandingkan/menguraikan/menemukan penyebab; C5 menilai/memberi alasan/merefleksikan; C6 merumuskan/merancang/mengusulkan.");
+  p("");
+  p("# BAGIAN 7. STRUKTUR STANDAR KISI-KISI");
+  p("7.1 Kepala: nama sekolah, mata pelajaran, kelas/fase, semester, tahun pelajaran, jenis asesmen, nama guru, jumlah dan bentuk soal, jumlah opsi, alokasi waktu, acuan.");
+  p("7.2 Tabel utama, satu baris per nomor soal:");
+  p("| No | TP | Kode dan materi | Indikator soal | Level (C) | Kategori | Bentuk | Stimulus/visual | Skor maks | No. soal |");
+  p("- Kolom Skor maks diisi sesuai Bagian 9" + (B.skor.mode === "level" ? " menurut bentuk dan kategori kognitif butir." : "."));
+  p("- Indikator ditulis: \"Disajikan [stimulus], murid dapat [kata kerja operasional] [objek]\".");
+  p("- Materi dan indikator tidak boleh melenceng dari kode materi pada Bagian 2.3.");
+  p("7.3 Rekap wajib (dihitung dari basis data): TP × bentuk; TP × kategori kognitif; butir visual per TP. Angka harus sama dengan Bagian 5.");
+  p("7.4 Catatan guru: asumsi, data simulasi, visual yang perlu dibuat guru, butir yang perlu verifikasi fakta.");
+  p("");
+  p("# BAGIAN 8. STRUKTUR NASKAH SOAL, KUNCI, DAN PEMBAHASAN");
+  p("Urutan: (1) sampul dan identitas; (2) petunjuk umum; (3) Bagian I Pilihan Ganda" + (hasLn ? "; (3b) " + lnName : "") + "; (4) Bagian II Uraian; (5) kunci jawaban; (6) pembahasan; (7) kunci dan rubrik uraian; (8) pedoman penskoran; (9) laporan audit dan catatan guru.");
+  p("Pisahkan naskah murid (1–4) dari lembar guru (5–9) agar kunci tidak ikut tercetak.");
+  p("Format butir: Nomor | TP | Kode materi | Level (C) | Kategori; stimulus/spesifikasi visual; pokok soal; opsi" + (B.pg ? " " + rng : "") + ".");
+  p("Pembahasan PG 2–4 kalimat: alasan kunci benar, alasan satu–dua pengecoh keliru, dan langkah hitung untuk butir data. Tanpa fakta di luar Bagian 2.3.");
+  p("");
+  p("# BAGIAN 9. RUBRIK DAN PEDOMAN PENSKORAN");
+  var SK = B.skor, TOT = SK.total;
+  if(SK.mode === "level"){
+    p("Skor diatur guru per level kognitif (skor maksimum per butir). Gunakan apa adanya:");
+    p("| Bentuk | Level | Jumlah butir | Skor per butir | Subtotal |");
+    p("| --- | --- | --- | --- | --- |");
+    SK.rows.forEach(function(r){ for(var j=0;j<3;j++) if(r.cnt[j]) p("| " + r.nama + " | " + LVN[j] + " (" + LVC[j] + ") | " + r.cnt[j] + " | " + fmt(r.sc[j]) + " | " + fmt(r.cnt[j]*r.sc[j]) + " |"); });
+    p("| Total skor maksimum | | " + B.N + " | | " + fmt(TOT) + " |");
+    p("- Skor setiap butir mengikuti kategori kognitif butir itu di basis data. Jika level butir berubah saat penulisan atau audit, skornya ikut berubah dan total di atas harus tetap terpenuhi; bila tidak, kembalikan level butir sesuai blueprint.");
+    if(SK.byKey.pg) p("- Pilihan ganda: benar = skor level butir, salah/kosong = 0; tanpa pengurangan skor.");
+    if(SK.byKey.ln) p("- " + lnName + ": skor maksimum sesuai level butir; tentukan aturan skor parsial.");
+  } else {
+    if(SK.byKey.pg) p("- Pilihan ganda: " + B.pg + " butir × " + fmt(SK.byKey.pg.sc[0]) + " = " + fmt(SK.byKey.pg.sub) + " (benar = " + fmt(SK.byKey.pg.sc[0]) + ", salah/kosong = 0; tanpa pengurangan skor).");
+    if(SK.byKey.ln) p("- " + lnName + ": " + B.ln + " butir × " + fmt(SK.byKey.ln.sc[0]) + " = " + fmt(SK.byKey.ln.sub) + " (tentukan aturan skor parsial).");
+    if(SK.byKey.ur) p("- Uraian: " + B.ur + " butir × skor maksimum " + fmt(SK.byKey.ur.sc[0]) + " = " + fmt(SK.byKey.ur.sub) + ".");
+  }
+  if(B.ur){
+    var urSc = SK.byKey.ur ? SK.byKey.ur.sc : [8,8,8];
+    var allEight = urSc.every(function(x,j){ return !B.fur[j] || near(x, 8); });
+    p("- Rubrik analitik uraian: Aspek A (ketepatan konsep dan fakta) 0–4 dan Aspek B (penalaran dan penggunaan stimulus/data) 0–4; skor mentah maksimum 8." + (allEight ? "" : " Skor butir = (A + B) ÷ 8 × skor maksimum butir sesuai Bagian 9."));
+    p("  4 = tepat dan lengkap; 3 = sebagian besar tepat, satu kekeliruan kecil; 2 = sebagian tepat, ada kekeliruan berarti; 1 = sedikit tepat / pernyataan tanpa alasan; 0 = tidak tepat / tidak menjawab.");
+    p("- Setiap uraian memuat: jawaban ideal, 3–5 poin kunci, pemetaan poin ke skor Aspek A dan B, alternatif jawaban yang diterima, contoh jawaban skor tinggi dan sedang.");
+  }
+  if(near(TOT, 100)) p("- Nilai akhir = jumlah skor semua bagian (maksimum 100).");
+  else p("- Nilai akhir = (jumlah skor diperoleh ÷ " + fmt(TOT) + ") × 100, dibulatkan ke bilangan bulat terdekat.");
+  p("- Ambang ketercapaian ditetapkan guru/sekolah; jangan menetapkan ambang baku atas nama kurikulum tanpa dokumen.");
+  p("- Jawaban benar dengan kalimat berbeda tetap diberi skor; kesalahan ejaan tidak mengurangi skor selama makna jelas.");
+  p("");
+  p("# BAGIAN 10. AUDIT INSTRUMEN");
+  p("Audit setelah semua butir selesai dan sebelum perakitan. Perbaiki langsung di basis data, terapkan ke semua dokumen, audit ulang butir yang diubah (satu putaran). Sisa masalah dicatat sebagai catatan guru.");
+  p("Daftar periksa (status Sesuai/Revisi):");
+  p("- Kesesuaian TP dan materi: tiap butir memetakan ke satu TP dan satu kode materi; tidak ada materi di luar cakupan.");
+  p("- Indikator terukur dan kata kerja sesuai level.");
+  p("- Komposisi: " + B.pg + " PG + " + (hasLn ? B.ln + " " + lnName + " + " : "") + B.ur + " uraian = " + B.N + "; per TP sesuai Bagian 5; LOTS/MOTS/HOTS = " + B.lv.join("/") + ".");
+  p("- Visual: " + sumv(B.visA) + " butir; per TP " + B.visA.join("/") + "; setiap visual punya spesifikasi lengkap.");
+  p("- Konsistensi nomor, TP, level, bentuk di kisi-kisi, naskah, kunci, pembahasan, rubrik.");
+  if(B.pg) p("- Kebenaran kunci: tepat satu kunci benar per PG; semua perhitungan dihitung ulang. Sebaran kunci " + rng + " sesuai Bagian 5.");
+  p("- Kualitas pokok soal dan opsi; kesesuaian label HOTS; independensi butir.");
+  p("- Keakuratan fakta; data buatan berlabel data simulasi; tidak ada kutipan atau sumber karangan.");
+  p("- Bahasa dan keterbacaan; netralitas dan kepekaan konteks.");
+  p("- Rubrik sesuai butir; total skor " + fmt(TOT) + (near(TOT,100) ? "" : " (dikonversi ke 0–100)") + ".");
+  p("Batas audit (wajib dinyatakan): audit ini telaah isi dan konsistensi oleh penyusun, bukan validasi empiris; tidak ada klaim validitas, reliabilitas, daya beda, atau kesukaran terukur sebelum uji coba; tampilan visual dinyatakan \"belum diaudit\" bila gambar belum benar-benar dibuat dan dilihat; aspek yang tidak bisa diperiksa ditulis \"tidak diperiksa\".");
+  p("Format laporan: | No | Aspek | Temuan | Tindakan | Status akhir |, lalu ringkasan jumlah temuan, yang sudah diperbaiki, dan yang perlu keputusan guru.");
+  p("");
+  p("# BAGIAN 11. FORMAT KELUARAN DAN PENGIRIMAN BERTAHAP");
+  p("Urutan keluaran: (1) ringkasan asumsi (maks. 10 baris); (2) peta TP–materi–indikator; (3) blueprint; (4) Dokumen 1 Kisi-Kisi; (5) Dokumen 2 Naskah Soal + kunci, pembahasan, rubrik, pedoman skor; (6) laporan audit dan catatan guru.");
+  var blk = Math.ceil(B.N / 20);
+  p("Jika panjang, kirim bertahap tanpa menunggu persetujuan: blok 1 = asumsi, peta, blueprint, kisi-kisi nomor 1–" + B.N + "; blok berikutnya = naskah per 20 butir (" + blk + " blok); blok akhir = kunci, pembahasan, rubrik, pedoman skor, audit, catatan guru. Beri penanda posisi di awal dan akhir tiap blok.");
+  var nm = (v(S.jenis,"Asesmen").match(/\(([^)]+)\)/) || [null, v(S.jenis,"Asesmen")])[1].replace(/\s+/g,"-");
+  var fileTag = [nm, v(S.mapel,"Mapel"), v(S.kelas,"Kelas").split("/")[0].trim(), v(S.tahun,"").replace("/","-")].filter(Boolean).join("_").replace(/\s+/g,"-");
+  p("Jika alat pembuat dokumen tersedia, hasilkan dua berkas: Kisi-Kisi_" + fileTag + " dan Naskah_" + fileTag + ". Jika tidak, sajikan dalam tabel dan teks terformat siap salin.");
+  p("");
+  p("Daftar periksa serah terima:");
+  p("- [ ] Total " + B.N + " butir (" + B.pg + " PG" + (hasLn ? ", " + B.ln + " " + lnName : "") + ", " + B.ur + " uraian)" + (B.pg && opsiSet ? "; opsi PG " + k + " (" + rng + ") konsisten" : "") + ".");
+  p("- [ ] LOTS " + B.lv[0] + ", MOTS " + B.lv[1] + ", HOTS " + B.lv[2] + "; butir visual " + sumv(B.visA) + ".");
+  p("- [ ] Nomor dan atribut butir identik di semua dokumen.");
+  if(B.pg) p("- [ ] Sebaran kunci seimbang dan tidak berpola.");
+  p("- [ ] Semua data buatan berlabel data simulasi.");
+  p("- [ ] Tidak ada klaim sumber, kutipan, atau audit yang tidak benar-benar dilakukan.");
+  p("- [ ] Total skor " + fmt(TOT) + (SK.mode === "level" ? " sesuai skor per level" : "") + "; rubrik lengkap.");
+  p("- [ ] Catatan guru dan asumsi tercantum.");
+  p("");
+  p("Mulai sekarang dari Tahap A.");
+  return L.join("\n");
+}
+
+/* ---------- render ---------- */
+function renderTps(){
+  var box = $("tpList"); box.innerHTML = "";
+  S.tps.forEach(function(t,i){
+    var d = document.createElement("div"); d.className = "tp";
+    d.innerHTML =
+      '<div class="tp-head"><strong>TP ' + (i+1) + '</strong><span class="tp-meta" id="tpMeta'+i+'"></span>' +
+      (S.tps.length > 1 ? '<button class="btn danger small" type="button" data-del="'+i+'">Hapus</button>' : '') + '</div>' +
+      '<label class="f req"><span>Rumusan TP</span><textarea id="tpTeks'+i+'" rows="3">' + esc(t.teks) + '</textarea></label>' +
+      '<label class="f"><span>Bab dan sub-materi</span><textarea class="mono" id="tpMat'+i+'" rows="6" placeholder="# Judul bab\nSub-materi pertama\nSub-materi kedua">' + esc(t.materi) + '</textarea></label>' +
+      (S.alok === "manual" ? '<label class="f" style="max-width:200px"><span>Jumlah butir TP ini</span><input type="number" min="0" id="tpMan'+i+'" value="'+esc(t.manual)+'"></label>' : '');
+    box.appendChild(d);
+    $("tpTeks"+i).addEventListener("input", function(e){ S.tps[i].teks = e.target.value; update(); });
+    $("tpMat"+i).addEventListener("input", function(e){ S.tps[i].materi = e.target.value; update(); });
+    if($("tpMan"+i)) $("tpMan"+i).addEventListener("input", function(e){ S.tps[i].manual = e.target.value; update(); });
+  });
+  box.querySelectorAll("[data-del]").forEach(function(b){
+    b.addEventListener("click", function(){ S.tps.splice(+b.getAttribute("data-del"), 1); renderTps(); update(); });
+  });
+}
+function bindStatic(){
+  document.querySelectorAll("[data-k]").forEach(function(el){
+    var k = el.getAttribute("data-k");
+    el.value = S[k] == null ? "" : S[k];
+    el.oninput = function(){ S[k] = el.getAttribute("data-num") ? (el.value === "" ? "" : num(el.value)) : el.value; update(); };
+  });
+  document.querySelectorAll("#opsiSeg button").forEach(function(b){
+    b.setAttribute("aria-pressed", String(S.opsi === b.getAttribute("data-opsi")));
+    b.onclick = function(){ S.opsi = b.getAttribute("data-opsi"); bindStatic(); update(); };
+  });
+  document.querySelectorAll("#skorSeg button").forEach(function(b){
+    b.setAttribute("aria-pressed", String(S.skorMode === b.getAttribute("data-skor")));
+    b.onclick = function(){ S.skorMode = b.getAttribute("data-skor"); bindStatic(); update(); };
+  });
+  $("skorBentuk").hidden = S.skorMode === "level";
+  $("skorLevel").hidden = S.skorMode !== "level";
+  skorSig = "";
+  document.querySelectorAll("#alokSeg button").forEach(function(b){
+    b.setAttribute("aria-pressed", String(S.alok === b.getAttribute("data-alok")));
+    b.onclick = function(){ S.alok = b.getAttribute("data-alok"); bindStatic(); renderTps(); update(); };
+  });
+  var ch = $("visualChips"); ch.innerHTML = "";
+  VISUAL_TYPES.forEach(function(v, i){
+    var l = document.createElement("label");
+    l.innerHTML = '<input type="checkbox" id="vis'+i+'" ' + ((S.visualJenis||[]).indexOf(v) >= 0 ? "checked" : "") + '> ' + v;
+    ch.appendChild(l);
+    l.querySelector("input").addEventListener("change", function(e){
+      S.visualJenis = (S.visualJenis||[]).filter(function(x){ return x !== v; });
+      if(e.target.checked) S.visualJenis.push(v);
+      S.visualJenis.sort(function(a,b){ return VISUAL_TYPES.indexOf(a) - VISUAL_TYPES.indexOf(b); });
+      update();
+    });
+  });
+}
+
+var skorSig = "";
+function renderSkorLevel(B){
+  var defs = formDefs(B);
+  var sig = defs.map(function(f){ return f.key + ":" + f.nama; }).join("|");
+  if(sig !== skorSig){
+    skorSig = sig;
+    if(!defs.length){ $("skorLevelTbl").innerHTML = '<p class="hint">Isi jumlah soal dulu.</p>'; return; }
+    var h = '<table><thead><tr><th>Bentuk</th>' + LVN.map(function(n,j){ return '<th>'+n+'<br><span style="font-weight:400">'+LVC[j]+'</span></th>'; }).join("") + '<th>Subtotal</th></tr></thead><tbody>';
+    defs.forEach(function(f){
+      h += '<tr><td>' + esc(f.nama) + '</td>';
+      for(var j=0;j<3;j++){
+        h += '<td><input type="number" min="0" step="0.5" id="sk_'+f.key+'_'+j+'" value="'+esc(S.skorLv[f.key][j])+'" aria-label="Skor '+esc(f.nama)+' '+LVN[j]+'" style="width:76px;text-align:right">' +
+             '<div style="font-size:11px;color:var(--muted)" id="skc_'+f.key+'_'+j+'"></div></td>';
+      }
+      h += '<td><strong id="sks_'+f.key+'"></strong></td></tr>';
+    });
+    h += '</tbody></table>';
+    $("skorLevelTbl").innerHTML = h;
+    defs.forEach(function(f){ for(var j=0;j<3;j++) (function(key, jj){
+      $("sk_"+key+"_"+jj).addEventListener("input", function(e){ S.skorLv[key][jj] = e.target.value === "" ? "" : num(e.target.value); update(); });
+    })(f.key, j); });
+  }
+  B.skor.rows.forEach(function(r){
+    for(var j=0;j<3;j++){
+      var c = $("skc_"+r.key+"_"+j), inp = $("sk_"+r.key+"_"+j);
+      if(c) c.textContent = r.cnt[j] + " butir" + (r.cnt[j] ? " = " + fmt(r.cnt[j]*r.sc[j]) : "");
+      if(inp) inp.style.opacity = r.cnt[j] ? "1" : ".55";
+    }
+    var s = $("sks_"+r.key); if(s) s.textContent = fmt(r.sub);
+  });
+}
+function bar(a){
+  var t = a[0]+a[1]+a[2] || 1;
+  return '<div class="bar" aria-hidden="true"><span class="c-l" style="width:'+(a[0]/t*100)+'%"></span><span class="c-m" style="width:'+(a[1]/t*100)+'%"></span><span class="c-h" style="width:'+(a[2]/t*100)+'%"></span></div>';
+}
+
+function update(){
+  save();
+  var B = compute();
+  // tp meta
+  B.tps.forEach(function(t,i){ var m = $("tpMeta"+i); if(m) m.textContent = t.parsed.babs.length + " bab · " + t.parsed.subCount + " sub-materi · " + (B.tot[i]||0) + " butir"; });
+  // pills
+  var pct = num(S.lots)+num(S.mots)+num(S.hots);
+  var pp = $("pctPill"); pp.textContent = fmt(pct) + "%"; pp.className = "pill " + (Math.abs(pct-100) < 1e-9 ? "ok" : "bad");
+  if(S.skorMode === "level") renderSkorLevel(B);
+  var sk = B.skor.total;
+  var sp = $("skorPill"); sp.textContent = fmt(sk);
+  sp.className = "pill " + (near(sk,100) ? "ok" : (S.skorMode === "level" && sk > 0 ? "ok" : "warn"));
+  $("skorNote").textContent = near(sk,100) ? "" : (S.skorMode === "level" && sk > 0 ? "Nilai = skor ÷ " + fmt(sk) + " × 100" : "");
+  // tiles
+  var visTot = B.visA.reduce(function(a,b){return a+b;},0);
+  $("tiles").innerHTML =
+    tile("Total butir", B.N, B.pg + " PG · " + B.ur + " uraian" + (B.ln ? " · " + B.ln + " lain" : "")) +
+    tile("Kognitif", B.lv.join(" / "), "LOTS / MOTS / HOTS") +
+    tile("Visual", visTot, fmt(num(S.visualPct)) + "% dari total") +
+    tile("Opsi PG", B.pg ? (S.opsi ? S.opsi + " opsi" : "belum") : "–", B.pg && S.opsi ? (S.opsi==="5"?"A–E":"A–D") : (B.pg ? "wajib dipilih" : "tidak ada PG"));
+  // checks
+  $("checks").innerHTML = validate(B).map(function(c){ return '<li class="'+c[0]+'">'+esc(c[1])+'</li>'; }).join("");
+  // blueprint view
+  var hasLn = B.ln > 0;
+  var h = '<h3>Alokasi per TP</h3><div class="tbl-wrap"><table><thead><tr><th>TP</th><th>PG</th>' + (hasLn ? '<th>'+esc(S.lainNama||"Lain")+'</th>' : '') + '<th>Uraian</th><th>Total</th><th>LOTS</th><th>MOTS</th><th>HOTS</th><th>Visual</th><th style="min-width:110px">Komposisi</th></tr></thead><tbody>';
+  B.tps.forEach(function(t,i){
+    h += '<tr><td>TP '+(i+1)+'</td><td>'+B.pgA[i]+'</td>' + (hasLn ? '<td>'+B.lnA[i]+'</td>' : '') + '<td>'+B.urA[i]+'</td><td><strong>'+B.tot[i]+'</strong></td><td>'+B.LM[i][0]+'</td><td>'+B.LM[i][1]+'</td><td>'+B.LM[i][2]+'</td><td>'+B.visA[i]+'</td><td>'+bar(B.LM[i])+'</td></tr>';
+  });
+  h += '</tbody><tfoot><tr><td>Jumlah</td><td>'+B.pg+'</td>' + (hasLn ? '<td>'+B.ln+'</td>' : '') + '<td>'+B.ur+'</td><td>'+B.N+'</td><td>'+B.lv[0]+'</td><td>'+B.lv[1]+'</td><td>'+B.lv[2]+'</td><td>'+visTot+'</td><td>'+bar(B.lv)+'</td></tr></tfoot></table></div>';
+  h += '<div class="legend"><span><i class="c-l"></i>LOTS C1–C2</span><span><i class="c-m"></i>MOTS C3</span><span><i class="c-h"></i>HOTS C4–C6</span></div>';
+  h += '<h3>Peta nomor soal</h3><div class="tbl-wrap"><table><thead><tr><th>Nomor</th><th>Bentuk</th><th>TP</th><th style="text-align:left">Level</th></tr></thead><tbody>';
+  B.nomor.forEach(function(r){
+    var nr = r.from === r.to ? r.from : r.from + "–" + r.to;
+    var lv = r.lvName ? r.lvName : lvLabel(r.lv);
+    h += '<tr><td>'+nr+'</td><td>'+esc(r.bentuk)+'</td><td>TP '+(r.tp+1)+'</td><td class="l">'+esc(lv)+'</td></tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<h3>Skor ' + (B.skor.mode === "level" ? "per level kognitif" : "per bentuk soal") + '</h3><div class="tbl-wrap"><table><thead><tr><th>Bentuk</th><th>LOTS</th><th>MOTS</th><th>HOTS</th><th>Subtotal</th></tr></thead><tbody>';
+  B.skor.rows.forEach(function(r){
+    h += '<tr><td>'+esc(r.nama)+'</td>' + [0,1,2].map(function(j){ return '<td>'+(r.cnt[j] ? r.cnt[j]+' × '+fmt(r.sc[j]) : '–')+'</td>'; }).join("") + '<td>'+fmt(r.sub)+'</td></tr>';
+  });
+  h += '</tbody><tfoot><tr><td>Total skor maksimum</td><td></td><td></td><td></td><td>'+fmt(B.skor.total)+'</td></tr></tfoot></table></div>';
+  if(!near(B.skor.total,100) && B.skor.total > 0) h += '<p class="hint" style="margin:6px 0 0">Nilai akhir = skor diperoleh ÷ '+fmt(B.skor.total)+' × 100.</p>';
+  if(B.pg && S.opsi){
+    h += '<p class="hint" style="margin:10px 0 0">Sebaran kunci target: setiap opsi '+(B.keyBase===B.keyMax?B.keyBase:B.keyBase+'–'+B.keyMax)+' butir dari '+B.pg+' PG.</p>';
+  }
+  $("viewBp").innerHTML = h;
+  // prompt
+  var txt = buildPrompt(B);
+  $("promptBox").value = txt;
+  var words = txt.split(/\s+/).filter(Boolean).length;
+  $("promptMeta").textContent = txt.length.toLocaleString("id-ID") + " karakter · " + words.toLocaleString("id-ID") + " kata";
+}
+function tile(k, v, s){ return '<div class="tile"><div class="k">'+esc(k)+'</div><div class="v">'+esc(v)+'</div><div class="s">'+esc(s)+'</div></div>'; }
+
+/* ---------- events ---------- */
+$("addTp").onclick = function(){ S.tps.push({teks:"", materi:"", manual:""}); renderTps(); update(); };
+$("btnContoh").onclick = function(){ S = clone(CONTOH); bindStatic(); renderTps(); update(); };
+var armed = false, armTimer;
+$("btnKosong").onclick = function(){
+  var b = $("btnKosong");
+  if(!armed){ armed = true; b.textContent = "Klik lagi untuk mengosongkan"; armTimer = setTimeout(function(){ armed=false; b.textContent="Kosongkan formulir"; }, 3000); return; }
+  clearTimeout(armTimer); armed = false; b.textContent = "Kosongkan formulir";
+  S = clone(KOSONG); bindStatic(); renderTps(); update();
+};
+function selectTab(pr){
+  $("tabBp").setAttribute("aria-selected", String(!pr)); $("tabPr").setAttribute("aria-selected", String(pr));
+  $("viewBp").hidden = pr; $("viewPr").hidden = !pr;
+}
+$("tabBp").onclick = function(){ selectTab(false); };
+$("tabPr").onclick = function(){ selectTab(true); };
+$("btnCopy").onclick = function(){
+  var t = $("promptBox").value, toast = $("toast");
+  function done(ok){ toast.textContent = ok ? "Tersalin. Tempel ke Claude." : "Gagal menyalin. Pilih teks lalu tekan Ctrl+C."; setTimeout(function(){ toast.textContent=""; }, 3500); }
+  try {
+    navigator.clipboard.writeText(t).then(function(){ done(true); }, function(){ fallback(); });
+  } catch(e){ fallback(); }
+  function fallback(){
+    var ta = $("promptBox"); ta.focus(); ta.select();
+    var ok = false; try { ok = document.execCommand("copy"); } catch(e){}
+    done(ok);
+  }
+};
+
+bindStatic(); renderTps(); update();
+})();
+</script>
+</body>
+</html>
