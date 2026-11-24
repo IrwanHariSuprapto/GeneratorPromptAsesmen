@@ -133,7 +133,7 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:2px}
     <p>Isi data asesmen di kiri. Blueprint komposisi dihitung otomatis, lalu master prompt lengkap siap disalin ke Claude untuk membuat kisi-kisi, naskah, kunci, rubrik, dan audit.</p>
   </div>
   <div class="top-actions">
-    <button class="btn ghost small" id="btnContoh" type="button">Muat contoh IPS VIII</button>
+    <button class="btn ghost small" id="btnContoh" type="button">Muat contoh Matematika XI</button>
     <button class="btn danger small" id="btnKosong" type="button">Kosongkan formulir</button>
   </div>
 </header>
@@ -164,7 +164,7 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:2px}
       <button class="btn ghost small" type="button" id="addTp">+ Tambah TP</button>
     </div>
     <label class="f" style="margin-top:14px"><span>Dokumen acuan/sumber (opsional)</span>
-      <input type="text" id="sumber" data-k="sumber" placeholder="Contoh: Buku Siswa IPS Kelas VIII Kurikulum Merdeka, Bab 1–4">
+      <input type="text" id="sumber" data-k="sumber" placeholder="Contoh: Buku Siswa Matematika Kelas XI, Bab 1–2">
     </label>
   </section>
 
@@ -263,27 +263,54 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:2px}
 <script>
 (function(){
 "use strict";
-var STORE = "asas-prompt-gen-v1";
+var STORE = "asas-prompt-gen-v3";
 var VISUAL_TYPES = ["foto","ilustrasi","grafik","tabel","diagram","skema","infografik","peta"];
 
 var CONTOH = {
-  sekolah:"SMP BAHAGIA", jenjang:"SMP", mapel:"IPS", kelas:"VIII / D", semester:"Ganjil",
-  tahun:"2026/2027", jenis:"Asesmen Sumatif Akhir Semester (ASAS)", guru:"Deni Rohendi, S.Pd., M.Pd.",
-  waktu:120, sumber:"",
+  sekolah:"SMA Negeri 1 Toboali", jenjang:"SMA", mapel:"Matematika", kelas:"XI/F", semester:"Ganjil",
+  tahun:"2026/2027", jenis:"Sumatif Akhir Semester", guru:"Irwan Hari Suprapto, S.Pd.",
+  waktu:90, sumber:"Dokumen TP Matematika Fase F berbasis Taksonomi SOLO (TP 1–7) yang disusun guru; CP Matematika Fase F, Keputusan Kepala BSKAP No. 046/H/KR/2025",
   pg:40, uraian:5, lainNama:"", lainJumlah:0, opsi:"4", alok:"materi",
   lots:25, mots:60, hots:15, visualPct:40,
-  visualJenis:["foto","ilustrasi","grafik","tabel","diagram","skema","infografik"], desain:"",
+  visualJenis:["ilustrasi","grafik","tabel","diagram","skema"], desain:"",
   bobotPG:60, bobotUraian:40, bobotLain:0,
   skorMode:"bentuk", skorLv:{pg:[1,1.5,2], ur:[5,7.5,9.5], ln:[1,2,3]},
   tps:[
-    {teks:"Murid mampu menjelaskan potensi bencana alam, menganalisis dampak perubahan iklim terhadap kehidupan ekonomi, sosial, dan budaya masyarakat, serta merefleksikan pola adaptasi yang dapat dilakukan dalam konteks lokal, regional, dan global.", manual:"",
-     materi:"# Potensi dan karakteristik bencana alam\nPengertian dan jenis bencana alam (geologis, hidrometeorologis, biologis)\nFaktor penyebab dan wilayah rawan bencana di Indonesia\nDampak bencana terhadap lingkungan dan kehidupan masyarakat\n# Perubahan iklim\nPengertian cuaca, iklim, dan perubahan iklim\nFaktor alami dan aktivitas manusia yang memengaruhi perubahan iklim\nPemanasan global dan perubahan pola musim\n# Dampak perubahan iklim\nDampak terhadap kehidupan ekonomi (pertanian, perikanan, pendapatan, permukiman)\nDampak terhadap kehidupan sosial, kesehatan, dan kebudayaan masyarakat\nRespons perubahan iklim dalam konteks lokal, nasional, dan global\n# Adaptasi dan mitigasi\nUpaya adaptasi masyarakat terhadap perubahan iklim\nMitigasi bencana sebelum, saat, dan setelah bencana\nPeran individu, masyarakat, dan pemerintah dalam mengurangi risiko bencana\nKeterkaitan adaptasi dan mitigasi dengan Tujuan Pembangunan Berkelanjutan (SDGs)"},
-    {teks:"Murid mampu menjelaskan konsep pasar, proses terbentuknya harga melalui mekanisme permintaan dan penawaran, serta fungsi dan peran lembaga keuangan dalam mendukung kegiatan ekonomi masyarakat.", manual:"",
-     materi:"# Konsep dan fungsi pasar\nPengertian, fungsi, dan peran pasar dalam kegiatan ekonomi\nJenis pasar menurut wujud, waktu, luas jangkauan, dan bentuk kegiatan\nPasar tradisional, pasar modern, dan pasar digital\n# Permintaan dan penawaran\nPengertian permintaan dan faktor yang memengaruhinya\nPengertian penawaran dan faktor yang memengaruhinya\nHubungan antara permintaan, penawaran, dan jumlah barang\n# Harga dan keseimbangan pasar\nPengertian harga dan proses pembentukan harga\nPermintaan dan penawaran dalam menentukan harga pasar (keseimbangan)\nPerubahan harga akibat perubahan permintaan atau penawaran\nContoh penerapan konsep harga dalam kehidupan sehari-hari\n# Lembaga keuangan\nPengertian dan fungsi lembaga keuangan\nPeran bank dalam menghimpun dan menyalurkan dana\nLembaga keuangan bank dan nonbank (koperasi)\nPemanfaatan layanan keuangan secara bijak, aman, dan bertanggung jawab"},
-    {teks:"Murid mampu menganalisis faktor pendorong, manfaat, dan tantangan perdagangan internasional serta keterkaitannya dengan kondisi ekonomi dan kehidupan masyarakat Indonesia.", manual:"",
-     materi:"# Konsep perdagangan internasional\nPengertian perdagangan dalam negeri dan perdagangan internasional\nPerbedaan perdagangan dalam negeri dan antarnegara\nEkspor dan impor sebagai bentuk kerja sama ekonomi\n# Faktor pendorong perdagangan internasional\nPerbedaan sumber daya alam dan kondisi geografis\nPerbedaan teknologi, kualitas sumber daya manusia, dan biaya produksi\nPerbedaan kebijakan, selera, dan kebutuhan negara\n# Manfaat dan tantangan perdagangan internasional\nManfaat perdagangan internasional bagi kehidupan ekonomi dan negara\nDampak terhadap produsen lokal/UMKM dan daya saing\nTantangan: kebijakan tarif/kuota, ketergantungan impor, perubahan nilai tukar\n# Perdagangan internasional Indonesia\nProduk unggulan ekspor dan impor Indonesia\nAspek keadilan, kemandirian ekonomi, dan kesejahteraan masyarakat"},
-    {teks:"Murid mampu mengolah informasi tentang perubahan sistem sosial budaya dalam masyarakat yang majemuk, mengidentifikasi faktor penyebab dan dampaknya, serta menunjukkan sikap menghargai keberagaman untuk menjaga kehidupan sosial yang harmonis.", manual:"",
-     materi:"# Masyarakat majemuk\nPengertian dan bentuk kemajemukan (suku, agama, bahasa, budaya) di Indonesia\nFaktor yang membentuk kemajemukan masyarakat Indonesia\n# Perubahan sosial budaya\nPengertian dan bentuk perubahan sosial budaya\nFaktor penyebab perubahan (internal dan eksternal, termasuk teknologi dan globalisasi)\nDampak positif dan negatif perubahan sosial budaya\n# Mengolah informasi perubahan\nMembaca, membandingkan, dan menyimpulkan informasi perubahan dari teks, tabel, atau grafik\n# Sikap menghargai keberagaman\nToleransi, gotong royong, dan integrasi sosial\nUpaya menjaga kehidupan sosial yang harmonis dalam masyarakat majemuk"}
+    {
+      "teks": "[Bilangan · SOLO Unistructural] Peserta didik mampu mengidentifikasi barisan aritmetika dan barisan geometri dari kumpulan bilangan, serta menyebutkan suku pertama, beda, atau rasionya pada situasi tabungan dan pertumbuhan sederhana.",
+      "manual": "",
+      "materi": "# Barisan aritmetika dan geometri\nPola bilangan\nSuku pertama\nBeda dan rasio\nCiri barisan aritmetika dan geometri\nContoh tabungan dan pertumbuhan"
+    },
+    {
+      "teks": "[Analisis Data dan Peluang · SOLO Unistructural] Peserta didik mampu mengidentifikasi jenis variabel (kategorikal dan numerikal) serta menyebutkan bentuk penyajian data yang sesuai, yaitu tabel dua arah dan diagram pencar, pada data dari situasi nyata.",
+      "manual": "",
+      "materi": "# Variabel dan penyajian data\nVariabel kualitatif dan kuantitatif\nTabel dua arah (kontingensi)\nDiagram pencar\nMembaca data mentah"
+    },
+    {
+      "teks": "[Bilangan · SOLO Multistructural] Peserta didik mampu menjelaskan dan menghitung suku ke-n serta jumlah n suku pertama deret aritmetika dan deret geometri, dan menjelaskan perbedaan pola pertumbuhan keduanya.",
+      "manual": "",
+      "materi": "# Barisan dan deret\nRumus Un dan Sn aritmetika\nRumus Un dan Sn geometri\nPertumbuhan bertambah tetap dan berkelipatan tetap"
+    },
+    {
+      "teks": "[Aljabar dan Fungsi · SOLO Multistructural] Peserta didik mampu menjelaskan konsep fungsi invers dan komposisi fungsi, serta mengilustrasikan dan menghitungnya pada fungsi linear, kuadrat, dan eksponensial sederhana menggunakan diagram panah, tabel, dan grafik.",
+      "manual": "",
+      "materi": "# Fungsi invers dan komposisi fungsi\nFungsi satu-satu\nInvers fungsi linear dan kuadrat (domain dibatasi)\nPengenalan invers eksponensial\nKomposisi f∘g\nDomain dan range"
+    },
+    {
+      "teks": "[Geometri · SOLO Multistructural] Peserta didik mampu mengklasifikasikan dan menjelaskan unsur-unsur lingkaran beserta sifat-sifat dasarnya pada gambar dan benda di sekitar.",
+      "manual": "",
+      "materi": "# Unsur-unsur lingkaran\nJari-jari, diameter, tali busur, busur, juring, tembereng\nSudut pusat dan sudut keliling\nGaris singgung dan titik singgung"
+    },
+    {
+      "teks": "[Analisis Data dan Peluang · SOLO Multistructural] Peserta didik mampu menjelaskan dan mengilustrasikan asosiasi antara dua variabel kategorikal (melalui frekuensi relatif pada tabel dua arah) dan antara dua variabel numerikal (melalui arah dan kekuatan hubungan pada diagram pencar).",
+      "manual": "",
+      "materi": "# Asosiasi dua variabel\nFrekuensi relatif dan relatif bersyarat\nPola diagram pencar (positif, negatif, tanpa hubungan)\nKekuatan hubungan"
+    },
+    {
+      "teks": "[Analisis Data dan Peluang · SOLO Multistructural] Peserta didik mampu mendaftar dan menghitung banyak kemungkinan susunan atau pilihan menggunakan aturan perkalian, permutasi, dan kombinasi, serta menjelaskan perbedaan penggunaannya.",
+      "manual": "",
+      "materi": "# Prinsip pencacahan\nAturan penjumlahan dan perkalian\nFaktorial\nPermutasi\nKombinasi\nRuang sampel dan kejadian"
+    }
   ]
 };
 var KOSONG = {
